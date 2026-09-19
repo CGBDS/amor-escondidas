@@ -222,7 +222,9 @@ function corazones(n){
 
 /* ---------- ACCIONES ---------- */
 function besar(){
-  if(!jugando || quieto || escondido || cooldownBeso) return;
+  if(!jugando || cooldownBeso) return;
+  if(quieto) toggleQuieto();       /* besar desactiva el modo quieto */
+  if(escondido) toggleEsconder();   /* y saca a Samuel de bajo la cama */
   cooldownBeso=true; setTimeout(()=>cooldownBeso=false, 650);
   sonidoBeso(); corazones(4);
   bajoSabanas=true; $("fondo").src="cuarto-sabanas-noche.png";
