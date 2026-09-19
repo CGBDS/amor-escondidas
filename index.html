@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Amor a Escondidas 💕</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#f5eeda; font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",cursive; color:#2b2b2b;
+         display:flex; justify-content:center; min-height:100vh; }
+  #juego { width:100%; max-width:480px; min-height:100vh; background:#f5eeda; position:relative;
+           border-left:4px solid #2b2b2b; border-right:4px solid #2b2b2b; }
+  .pantalla { padding:18px; text-align:center; }
+  .oculto { display:none !important; }
+  h1 { font-size:30px; margin:10px 0 4px; transform:rotate(-2deg); }
+  h2 { font-size:24px; margin:10px 0; }
+  p.sub { font-size:15px; margin-bottom:12px; }
+  .marco-dibujo { border:4px solid #2b2b2b; border-radius:18px; overflow:hidden; background:#fff;
+                  box-shadow:4px 4px 0 #2b2b2b; }
+  .marco-dibujo img { width:100%; display:block; }
+  .btn-grande { display:inline-block; margin-top:16px; padding:14px 42px; font-size:20px; font-family:inherit;
+    background:#ff8fb3; color:#2b2b2b; border:4px solid #2b2b2b; border-radius:999px;
+    box-shadow:4px 4px 0 #2b2b2b; cursor:pointer; }
+  .btn-grande:active { transform:translate(3px,3px); box-shadow:1px 1px 0 #2b2b2b; }
+  /* ===== HUD ===== */
+  #hud { display:flex; align-items:center; gap:8px; padding:10px 12px; }
+  .cara { width:52px; height:52px; border-radius:50%; border:3px solid #2b2b2b; background:#fff;
+          overflow:hidden; flex-shrink:0; }
+  .cara img { width:100%; height:100%; object-fit:cover; }
+  .barras { flex:1; }
+  .fila-barra { display:flex; align-items:center; gap:6px; margin:3px 0; font-size:13px; }
+  .barra { flex:1; height:16px; border:3px solid #2b2b2b; border-radius:10px; background:#fff; overflow:hidden; }
+  .relleno { height:100%; width:0%; transition:width .3s; }
+  #r-amor { background:linear-gradient(90deg,#ff6b9d,#ff9ebb); }
+  #r-sospecha { background:linear-gradient(90deg,#ff5252,#ff8a65); }
+  #nivel-tag { font-size:13px; background:#fff; border:3px solid #2b2b2b; border-radius:12px;
+               padding:4px 10px; white-space:nowrap; box-shadow:2px 2px 0 #2b2b2b; }
+  /* ===== CUARTO ===== */
+  #cuarto { position:relative; margin:0 12px; border:4px solid #2b2b2b; border-radius:18px;
+            overflow:hidden; box-shadow:4px 4px 0 #2b2b2b; aspect-ratio:3/2; background:#223; }
+  #cuarto img#fondo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  #cuarto.temblor { animation:temblor .35s infinite; }
+  @keyframes temblor {
+    0%{transform:translate(0,0)} 25%{transform:translate(-4px,3px)}
+    50%{transform:translate(4px,-3px)} 75%{transform:translate(-3px,-2px)} 100%{transform:translate(0,0)} }
+  #mama { position:absolute; right:2%; bottom:6%; width:34%; display:none; z-index:5;
+          filter:drop-shadow(3px 3px 0 rgba(0,0,0,.35)); }
+  #mama.visible { display:block; animation:asoma .4s ease-out; }
+  @keyframes asoma { from{transform:translateX(60px); opacity:0} to{transform:none; opacity:1} }
+  #mama.enorme { width:92%; right:4%; bottom:2%; animation:furia .5s ease-out; }
+  @keyframes furia { from{transform:scale(.3); opacity:0} to{transform:scale(1); opacity:1} }
+  #ojos { position:absolute; left:6%; bottom:2%; width:36%; display:none; z-index:4; }
+  #ojos.visible { display:block; animation:asoma .3s ease-out; }
+  #signo { position:absolute; right:6%; top:4%; font-size:52px; display:none; z-index:6;
+           animation:brinco .6s infinite; }
+  #signo.visible { display:block; }
+  @keyframes brinco { 0%,100%{transform:translateY(0) rotate(-8deg)} 50%{transform:translateY(-10px) rotate(8deg)} }
+  #corazones { position:absolute; left:4%; bottom:26%; width:56%; height:60%; pointer-events:none; z-index:3; }
+  .corazon { position:absolute; bottom:0; font-size:26px; animation:sube 1.6s ease-out forwards; }
+  @keyframes sube { to{ transform:translateY(-130px) scale(1.4) rotate(20deg); opacity:0; } }
+  #flash { position:absolute; inset:0; background:#fff8d0; opacity:0; pointer-events:none; z-index:7; }
+  #flash.on { animation:flashazo .35s ease-out; }
+  @keyframes flashazo { 0%{opacity:0} 30%{opacity:.95} 100%{opacity:0} }
+  #msg { position:absolute; left:50%; top:8px; transform:translateX(-50%) rotate(-1.5deg); z-index:8;
+         background:#fff; border:3px solid #2b2b2b; border-radius:14px; padding:6px 14px;
+         font-size:14px; box-shadow:3px 3px 0 #2b2b2b; max-width:92%; display:none; }
+  #msg.visible { display:block; }
+  /* ===== BOTONES ===== */
+  #botones { display:flex; gap:10px; padding:14px 12px 20px; }
+  #botones button { flex:1; font-family:inherit; background:#fff; border:4px solid #2b2b2b;
+    border-radius:18px; box-shadow:3px 3px 0 #2b2b2b; padding:8px 4px; cursor:pointer; font-size:14px; }
+  #botones button:active { transform:translate(2px,2px); box-shadow:1px 1px 0 #2b2b2b; }
+  #botones button img { width:64px; height:64px; display:block; margin:0 auto 4px; }
+  #botones button.activo { background:#ffe08a; }
+  #botones button:disabled { opacity:.45; }
+  .creditos { font-size:12px; opacity:.65; margin-top:10px; }
+</style>
+</head>
+<body>
+<div id="juego">
+
+  <!-- INICIO -->
+  <div id="inicio" class="pantalla">
+    <h1>💕 Amor a Escondidas 💕</h1>
+    <p class="sub">Samuel y Jeyci quieren darse amor…<br>¡pero la mamá no los puede ver! 🙈</p>
+    <div class="marco-dibujo"><img src="portada.webp" alt="Portada"></div>
+    <p class="sub" style="margin-top:12px">💋 <b>Besar</b> llena el amor &nbsp;•&nbsp; 🤫 <b>Quieto</b> cuando prenda la luz<br>🛏️ <b>Esconder</b> mete a Samuel bajo la cama &nbsp;•&nbsp; 👀 Si la sospecha se llena… ¡ATRAPADOS!</p>
+    <button class="btn-grande" id="btn-jugar">¡Jugar! 🎮</button>
+    <p class="creditos">Un juego de Samuel para Jeyci 💖</p>
+  </div>
+
+  <!-- PARTIDA -->
+  <div id="partida" class="pantalla oculto" style="padding:0">
+    <div id="hud">
+      <div class="cara"><img id="cara-samuel" src="samuel-base.webp" alt="Samuel"></div>
+      <div class="barras">
+        <div class="fila-barra">💕<div class="barra"><div class="relleno" id="r-amor"></div></div></div>
+        <div class="fila-barra">👀<div class="barra"><div class="relleno" id="r-sospecha"></div></div></div>
+      </div>
+      <div class="cara"><img id="cara-jeyci" src="jeyci-base.webp" alt="Jeyci"></div>
+      <div id="nivel-tag">Nivel 1</div>
+    </div>
+    <div id="cuarto">
+      <img id="fondo" src="cuarto-apagado.png" alt="Cuarto">
+      <img id="ojos" src="samuel-escondido.png" alt="Samuel escondido">
+      <img id="mama" src="mama-pregunta.png" alt="Mamá">
+      <div id="signo">❓</div>
+      <div id="corazones"></div>
+      <div id="flash"></div>
+      <div id="msg"></div>
+    </div>
+    <div id="botones">
+      <button id="b-besar"><img src="btn-besar.png" alt="Besar">💋 Besar</button>
+      <button id="b-quieto"><img src="btn-quieto.png" alt="Quieto">🤫 Quieto</button>
+      <button id="b-esconder"><img src="btn-esconder.png" alt="Esconder">🛏️ Esconder</button>
+    </div>
+  </div>
+
+  <!-- FIN -->
+  <div id="fin" class="pantalla oculto">
+    <h2 id="fin-titulo"></h2>
+    <div class="marco-dibujo"><img id="fin-img" src="pareja-feliz.webp" alt="Final"></div>
+    <p class="sub" id="fin-texto" style="margin-top:12px"></p>
+    <button class="btn-grande" id="btn-otra">🔁 Jugar otra vez</button>
+  </div>
+
+</div>
+<script>
+"use strict";
+/* ============================================================
+   AMOR A ESCONDIDAS — Samuel & Jeyci
+   Para cambiar el sonido del beso por el audio real:
+   sube el archivo como "beso.mp3" junto a este index.html
+   y cambia KISS_URL a "beso.mp3".
+   ============================================================ */
+const KISS_URL = null;
+const $ = id => document.getElementById(id);
+
+/* ---------- AUDIO (WebAudio, sin archivos) ---------- */
+let AC = null;
+function ac(){
+  try{
+    if(!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === "suspended") AC.resume();
+  }catch(e){ AC = null; }
+  return AC;
+}
+function tono(freq, t, dur, vol, tipo){
+  const c = ac(); if(!c) return;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = tipo || "sine"; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol || 0.12, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+/* musiquita romántica tipo cajita de música */
+const VALS = [523.25,587.33,659.25,783.99, 880,783.99,659.25,587.33,
+              523.25,659.25,783.99,1046.5, 880,783.99,659.25,587.33];
+let pasoMusica = 0, timerMusica = null;
+function musica(on){
+  const c = ac(); if(!c) return;
+  if(on && !timerMusica){
+    const tick = () => {
+      const t = c.currentTime + 0.05;
+      const f = VALS[pasoMusica % VALS.length];
+      tono(f, t, 0.5, 0.07, "sine");
+      tono(f*2, t, 0.4, 0.025, "triangle");
+      if(pasoMusica % 3 === 0) tono(VALS[(pasoMusica/3|0) % 8]/2, t, 0.9, 0.045, "triangle");
+      pasoMusica++;
+    };
+    tick(); timerMusica = setInterval(tick, 430);
+  } else if(!on && timerMusica){ clearInterval(timerMusica); timerMusica = null; }
+}
+function silencio(){ musica(false); }
+function sonidoLuz(){ const c=ac(); if(!c) return; const t=c.currentTime;
+  tono(1700,t,0.05,0.12,"square"); tono(850,t+0.07,0.08,0.1,"square"); }
+function sonidoBeso(){
+  if(KISS_URL){ new Audio(KISS_URL).play().catch(()=>{}); return; }
+  const c=ac(); if(!c) return; const t=c.currentTime;
+  tono(620,t,0.09,0.2,"sine"); tono(940,t+0.1,0.14,0.22,"sine"); /* "muah" sintético */
+}
+function sonidoPuerta(){ const c=ac(); if(!c) return; const t=c.currentTime;
+  for(let i=0;i<5;i++) tono(140+Math.random()*130, t+i*0.09, 0.09, 0.06,"sawtooth"); }
+function sonidoAtrapado(){ const c=ac(); if(!c) return; const t=c.currentTime;
+  [220,233,247,262,233,196].forEach((f,i)=>tono(f,t+i*0.13,0.32,0.14,"sawtooth")); }
+function sonidoNivel(){ const c=ac(); if(!c) return; const t=c.currentTime;
+  [523,659,784,1046].forEach((f,i)=>tono(f,t+i*0.1,0.25,0.12,"triangle")); }
+/* ---------- ESTADO DEL JUEGO ---------- */
+let jugando=false, nivel=1, amor=0, sospecha=0;
+let estado="lejos";           /* lejos | acercandose | luz | saliendo */
+let quieto=false, escondido=false, cooldownBeso=false, bajoSabanas=false;
+let timerMama=null;
+
+function msg(t, ms){
+  const m=$("msg");
+  if(!t){ m.classList.remove("visible"); return; }
+  m.textContent=t; m.classList.add("visible");
+  if(ms){ setTimeout(()=>{ if(m.textContent===t) m.classList.remove("visible"); }, ms); }
+}
+function pintarBarras(){
+  $("r-amor").style.width=Math.min(100,amor)+"%";
+  $("r-sospecha").style.width=Math.min(100,sospecha)+"%";
+  $("nivel-tag").textContent="Nivel "+nivel;
+}
+function caras(samuel, jeyci){
+  if(samuel) $("cara-samuel").src=samuel;
+  if(jeyci) $("cara-jeyci").src=jeyci;
+}
+function corazones(n){
+  const c=$("corazones");
+  for(let i=0;i<n;i++){
+    const s=document.createElement("span");
+    s.className="corazon"; s.textContent=["💕","💖","💗","😘"][Math.floor(Math.random()*4)];
+    s.style.left=(5+Math.random()*80)+"%";
+    s.style.fontSize=(20+Math.random()*18)+"px";
+    c.appendChild(s);
+    setTimeout(()=>s.remove(),1700);
+  }
+}
+
+/* ---------- ACCIONES ---------- */
+function besar(){
+  if(!jugando || quieto || escondido || cooldownBeso) return;
+  cooldownBeso=true; setTimeout(()=>cooldownBeso=false, 650);
+  sonidoBeso(); corazones(4);
+  bajoSabanas=true; $("fondo").src="cuarto-sabanas-noche.png";
+  setTimeout(()=>{ if(jugando && bajoSabanas && estado==="lejos"){
+    bajoSabanas=false; $("fondo").src="cuarto-apagado.png"; } }, 2600);
+  caras("samuel-besando.png","jeyci-besando.png");
+  setTimeout(()=>{ if(jugando && !quieto && !escondido) caras("samuel-enamorado.png","jeyci-enamorada.png"); }, 900);
+  if(estado==="luz" || estado==="acercandose"){
+    sospecha+=9+nivel*2;
+    msg("¡Te escuchó! 😱",1200);
+    caras("samuel-asustado.png","jeyci-asustada.png");
+  } else {
+    amor+=5; sospecha=Math.max(0,sospecha-0.5);
+  }
+  pintarBarras(); revisar();
+}
+function toggleQuieto(){
+  if(!jugando) return;
+  quieto=!quieto;
+  $("b-quieto").classList.toggle("activo",quieto);
+  if(quieto){
+    if(escondido) toggleEsconder();
+    if(estado==="lejos"){ bajoSabanas=false; $("fondo").src="cuarto-apagado.png"; }
+    caras("samuel-base.webp","jeyci-base.webp");
+    msg("🤫 ¡Queditos…!",1500);
+  } else msg(null);
+}
+function toggleEsconder(){
+  if(!jugando) return;
+  escondido=!escondido;
+  $("b-esconder").classList.toggle("activo",escondido);
+  $("ojos").classList.toggle("visible",escondido);
+  if(escondido){
+    if(quieto) toggleQuieto();
+    if(estado==="lejos"){ bajoSabanas=false; $("fondo").src="cuarto-apagado.png"; }
+    caras("samuel-base.webp","jeyci-base.webp");
+    msg("Samuel bajo la cama 👀",1500);
+  } else msg(null);
+}
+
+/* ---------- LA MAMÁ ---------- */
+function programarMama(){
+  clearTimeout(timerMama);
+  const espera=Math.max(2600,(9500-nivel*1100))*(0.7+Math.random()*0.6);
+  timerMama=setTimeout(()=>{ if(jugando) acercandose(); }, espera);
+}
+function acercandose(){
+  estado="acercandose"; silencio(); sonidoPuerta();
+  const mama=$("mama");
+  mama.src="mama-pregunta.png"; mama.classList.remove("enorme"); mama.classList.add("visible");
+  $("signo").classList.add("visible");
+  $("cuarto").classList.add("temblor");
+  msg("¡Se acerca a la puerta! ❓",2200);
+  caras("samuel-asustado.png","jeyci-asustada.png");
+  setTimeout(()=>{ if(jugando && estado==="acercandose"){
+    if(Math.random()<0.68) prenderLuz(); else irse();
+  }},2600);
+}
+function prenderLuz(){
+  estado="luz"; sonidoLuz();
+  bajoSabanas=false; $("fondo").src="cuarto-prendido.png";
+  const f=$("flash"); f.classList.remove("on"); void f.offsetWidth; f.classList.add("on");
+  $("mama").src="mama-sospechosa.png";
+  msg("💡 ¡PRENDIÓ LA LUZ! ¡QUIETOS!",2500);
+  tickLuz();
+  setTimeout(()=>{ if(jugando && estado==="luz") irse(); }, 3600);
+}
+function tickLuz(){
+  if(!jugando || estado!=="luz") return;
+  if(!quieto && !escondido){
+    sospecha+=6+nivel*1.5;
+    $("mama").src="mama-furiosa.png";
+    msg("¡Los vio moverse! 👀",1000);
+    caras("samuel-asustado.png","jeyci-asustada.png");
+  } else {
+    $("mama").src="mama-sospechosa.png";
+  }
+  pintarBarras();
+  if(!revisar()) setTimeout(tickLuz, 550);
+}
+function irse(){
+  estado="saliendo"; sonidoLuz();
+  $("fondo").src="cuarto-apagado.png";
+  const f=$("flash"); f.classList.remove("on"); void f.offsetWidth; f.classList.add("on");
+  $("mama").src="mama-espaldas.png";
+  $("signo").classList.remove("visible");
+  $("cuarto").classList.remove("temblor");
+  sospecha=Math.max(0,sospecha-14);
+  msg("Se fue… 😮‍💨",1600);
+  caras("samuel-enamorado.png","jeyci-enamorada.png");
+  pintarBarras();
+  setTimeout(()=>{
+    if(!jugando) return;
+    $("mama").classList.remove("visible");
+    estado="lejos"; musica(true); programarMama();
+  },1900);
+}
+
+/* ---------- REVISAR ESTADO ---------- */
+function revisar(){
+  if(sospecha>=100){ atrapados(); return true; }
+  if(amor>=100){ nivelSuperado(); return true; }
+  return false;
+}
+function atrapados(){
+  jugando=false; silencio(); sonidoAtrapado(); clearTimeout(timerMama);
+  const mama=$("mama");
+  mama.src="mama-furiosa.png"; mama.classList.remove("visible");
+  void mama.offsetWidth; mama.classList.add("visible","enorme");
+  $("cuarto").classList.add("temblor");
+  caras("samuel-asustado.png","jeyci-asustada.png");
+  setTimeout(()=>{
+    $("partida").classList.add("oculto"); $("fin").classList.remove("oculto");
+    $("fin-titulo").textContent="¡ATRAPADOS! 😱";
+    $("fin-img").src="mama-furiosa.png";
+    $("fin-texto").innerHTML="La mamá los vio dándose amor…<br>¡Corran! 🏃‍♂️💨<br><br>Llegaron al <b>Nivel "+nivel+"</b> con <b>"+Math.round(amor)+"%</b> de amor 💕";
+    $("cuarto").classList.remove("temblor");
+  },1600);
+}
+function nivelSuperado(){
+  jugando=false; silencio(); sonidoNivel(); clearTimeout(timerMama);
+  $("partida").classList.add("oculto"); $("fin").classList.remove("oculto");
+  $("fin-titulo").textContent="¡Nivel "+nivel+" superado! 💖";
+  $("fin-img").src="pareja-feliz.webp";
+  $("fin-texto").innerHTML="Samuel y Jeyci se dieron mucho amor sin que la mamá los viera 🥰<br><br>Pero en el <b>Nivel "+(nivel+1)+"</b> ella estará más atenta… 👀";
+  $("btn-otra").textContent="💕 Siguiente nivel";
+}
+
+/* ---------- INICIO / REINICIO ---------- */
+function empezar(nuevoNivel){
+  nivel=nuevoNivel; amor=0; sospecha=0; estado="lejos";
+  quieto=false; escondido=false; bajoSabanas=false;
+  $("b-quieto").classList.remove("activo"); $("b-esconder").classList.remove("activo");
+  $("ojos").classList.remove("visible");
+  $("mama").classList.remove("visible","enorme");
+  $("signo").classList.remove("visible");
+  $("cuarto").classList.remove("temblor");
+  $("fondo").src="cuarto-apagado.png";
+  $("inicio").classList.add("oculto"); $("fin").classList.add("oculto");
+  $("partida").classList.remove("oculto");
+  caras("samuel-enamorado.png","jeyci-enamorada.png");
+  pintarBarras(); msg("¡Dense amor! 💋",1800);
+  jugando=true; musica(true); programarMama();
+}
+$("btn-jugar").addEventListener("click",()=>{ ac(); empezar(1); });
+$("btn-otra").addEventListener("click",()=>{
+  ac();
+  if($("fin-titulo").textContent.includes("superado")){ empezar(nivel+1); }
+  else { $("btn-otra").textContent="🔁 Jugar otra vez"; empezar(1); }
+});
+$("b-besar").addEventListener("click",besar);
+$("b-quieto").addEventListener("click",toggleQuieto);
+$("b-esconder").addEventListener("click",toggleEsconder);
+</script>
+</body>
+</html>
